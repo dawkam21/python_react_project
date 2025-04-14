@@ -25,10 +25,28 @@ def main():
     game_state = ChessEngine.GameState()
     load_images() # raz przed loopem
     running = True
+    sq_selected = ()  # Tu będzie przechowywana wybrana figura : Tuple (row, col)
+    player_clicks = []  # Lista kliknięć gracza : Two Tuples [(row, col), (row, col)]
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() # (x, y) w pikselach
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sq_selected == (row, col): #kliknięcie tej samej figury
+                    sq_selected = () # odznaczanie figury
+                    player_clicks = []  # resetowanie kliknięć
+                else:
+                    sq_selected = (row, col)
+                    player_clicks.append(sq_selected) # dodawanie kliknięcia
+                if len(player_clicks) == 2: # po dwukrotnym kliknięciu
+                    move = ChessEngine.Move(player_clicks[0], player_clicks[1], game_state.board)
+                    # print(move.get_chess_notation())
+                    game_state.make_move(move)
+                    sq_selected = () # resetowanie kliknięcia
+                    player_clicks = [] # resetowanie kliknięć
 
         draw_game_state(screen, game_state)
         clock.tick(MAX_FPS)
@@ -36,7 +54,7 @@ def main():
 
  # Rysowanie planszy i figur / Lewy górny róg planszy zawsze biały
 def draw_board(screen):
-    colors = [p.Color('lightgray'), p.Color('brown')]
+    colors = [p.Color('lightgray'), p.Color('forestgreen')]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r + c) % 2)]
