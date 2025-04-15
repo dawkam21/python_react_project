@@ -23,6 +23,8 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color('white'))
     game_state = ChessEngine.GameState()
+    valid_moves = game_state.get_valid_moves()
+    move_made = False # zmiana ruchu
     load_images() # raz przed loopem
     running = True
     sq_selected = ()  # Tu będzie przechowywana wybrana figura : Tuple (row, col)
@@ -31,6 +33,7 @@ def main():
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            #Myszka
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() # (x, y) w pikselach
                 col = location[0] // SQ_SIZE
@@ -43,10 +46,24 @@ def main():
                     player_clicks.append(sq_selected) # dodawanie kliknięcia
                 if len(player_clicks) == 2: # po dwukrotnym kliknięciu
                     move = ChessEngine.Move(player_clicks[0], player_clicks[1], game_state.board)
-                    # print(move.get_chess_notation())
-                    game_state.make_move(move)
+                    print(move.get_chess_notation())
+                    if move in valid_moves: # jeśli ruch jest poprawny
+                        game_state.make_move(move)
+                        move_made = True
                     sq_selected = () # resetowanie kliknięcia
                     player_clicks = [] # resetowanie kliknięć
+
+            #key handlers
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z: # cofnięcie ruchu klawiszem 'z'
+                    game_state.undo_move()
+                    move_made = True
+                if e.key == p.K_ESCAPE: # wyjście z gry
+                    running = False
+
+        if move_made:
+            valid_moves = game_state.get_valid_moves()
+            move_made = False
 
         draw_game_state(screen, game_state)
         clock.tick(MAX_FPS)

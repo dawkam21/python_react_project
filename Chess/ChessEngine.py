@@ -19,7 +19,47 @@ class GameState():
         self.board[move.end_row][move.end_col] = move.piece_moved # Przeniesienie figury
         self.move_log.append(move) # Dodanie ruchu do logu
         self.white_to_move = not self.white_to_move # Zmiana tury
-        
+
+    def undo_move(self):
+        if len(self.move_log) != 0: # Jeśli jest coś do cofnięcia
+            move = self.move_log.pop() # Cofnięcie ostatniego ruchu
+            self.board[move.start_row][move.start_col] = move.piece_moved # Przywrócenie figury
+            self.board[move.end_row][move.end_col] = move.piece_captured # Przywrócenie figury przeciwnika
+            self.white_to_move = not self.white_to_move # Zmiana tury
+
+    '''
+    Wszystkie ruchy zawierające szach
+    '''
+    def get_valid_moves(self):
+        return self.get_all_possible_moves()
+
+    '''
+    Wszystkie ruchy niezawierające szacha
+    '''
+    def get_all_possible_moves(self):
+        moves = [Move((6, 3), (4, 3), self.board)]
+        for r in range(len(self.board)): # Iteracja po wierszach
+            for c in range(len(self.board[r])): # Iteracja po kolumnach
+                turn = self.board[r][c][0] # Kolor figury
+                if (turn == 'w' and self.white_to_move) or (turn == 'b' and not self.white_to_move):
+                    piece = self.board[r][c][1]
+                    if piece == 'p':
+                        self.get_pawn_moves(r, c, moves)
+                    elif piece == 'R':
+                        self.get_rook_moves(r, c, moves)
+        return moves
+    
+    '''
+    Zbierz wszystkie ruchy pionka w danym miejscu (kolumnie i wierszu) i dodaj do listy
+    '''
+    def get_pawn_moves(self, r, c, moves):
+        pass
+    '''
+    Zbierz wszystkie ruchy wieży w danym miejscu (kolumnie i wierszu) i dodaj do listy
+    '''
+    def get_rook_moves(self, r, c, moves):
+        pass
+
 class Move():
     ranks_to_rows = {"1": 7, "2": 6, "3": 5, "4": 4, 
                      "5": 3, "6": 2, "7": 1, "8": 0}
@@ -35,6 +75,13 @@ class Move():
         self.end_col = end_sq[1]
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
+        self.move_id = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col
+        print(self.move_id)
+
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return self.move_id == other.move_id
+        return False
     
     # Potem mogę zrobić prawdziwą notację szachową
     def get_chess_notation(self):
